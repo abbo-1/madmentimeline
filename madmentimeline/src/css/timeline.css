@@ -1,0 +1,114 @@
+/* src/components/Timeline.css */
+
+
+body {
+    font-family: "HelveticaNeueHeavy", sans-serif;
+
+    margin: 0;
+    place-items: center;
+    min-width: 320px;
+    min-height: 100vh;
+    /* background-color: #ffffff; */
+    background-image: linear-gradient(-321deg, #0d0d0d44 46%, transparent 98.05%),radial-gradient(circle at 14% 105%, #00bfff1f 38%, transparent 59.05%);
+  }
+
+  
+@font-face {
+    font-family: "HelveticaNeueHeavy";  /* Use a name without spaces */
+    src: local("HelveticaNeue Heavy"),
+         url("../assets/HelveticaNeueHeavy.ttf") format("truetype");
+  }
+  
+  .don{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    /* Optional styling: adjust size, margins, or z-index as needed */
+    width: 658px; /* example width */
+    z-index: 1000;
+  }
+  
+/* src/components/Timeline.css */
+.timelineContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .timeline {
+    display: flex;
+    width: 100%;
+    height: 250px;
+  }
+  
+  .timelineSection {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-right: 1px solid #999;
+    cursor: pointer;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    color: white;
+    font-weight: bold;
+  }
+  
+  .timelineSection:hover {
+    opacity: 0.8;
+  }
+  
+  .timelineSection:last-child {
+    border-right: none;
+  }
+  
+  .zoomedView {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden; /* Prevent horizontal scrolling */
+  }
+  
+  .zoomedSection {
+    flex: 1; /* Take up remaining space */
+    height: 50vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    color: white;
+    font-size: 3rem;
+    font-weight: bold;
+  }
+  
+  .edge {
+    width: 10%; /* Each edge takes up 10% of the screen width */
+    height: 50vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+    color: white;
+    font-weight: bold;
+  }
+  
+  .edge.prev {
+    margin-right: auto; /* Push the left edge to the far left */
+  }
+  
+  .edge.next {
+    margin-left: auto; /* Push the right edge to the far right */
+  }
+  
+  .edge:hover {
+    opacity: 1;
+  }
+  
