@@ -8,9 +8,9 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 } */
-/* 
+
 @font-face {
-  font-family: "HelveticaNeueHeavy";  /* Use a name without spaces */
+  font-family: "HelveticaNeueHeavy";
   src: local("HelveticaNeue Heavy"),
        url("../assets/HelveticaNeueHeavy.ttf") format("truetype");
-} */
+}

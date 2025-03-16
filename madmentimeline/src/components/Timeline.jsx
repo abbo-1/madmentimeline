@@ -31,6 +31,11 @@ const Timeline = ({ colors }) => {
     }
   };
 
+  const handleBackClick = () => {
+    setZoomedIndex(null);
+    setZoomedSeasonIndex(null); // Reset both zoom states to return to the main view
+  };
+
   const years = Array.from({ length: 11 }, (_, i) => 1960 + i); // Years from 1960 to 1970
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -38,29 +43,25 @@ const Timeline = ({ colors }) => {
   ];
 
   const seasons = [
-    { name: 'Season 1', start: '1960-03-01', end: '1960-11-30' },
-    { name: 'Season 2', start: '1961-02-01', end: '1962-08-30' },
-    { name: 'Season 3', start: '1963-03-01', end: '1963-12-31' },
-    { name: 'Season 4', start: '1964-11-01', end: '1965-08-30' },
-    { name: 'Season 5', start: '1966-05-01', end: '1967-04-30' },
-    { name: 'Season 6', start: '1967-12-01', end: '1968-11-30' },
-    { name: 'Season 7A', start: '1969-01-01', end: '1969-07-30' },
-    { name: 'Season 7B', start: '1970-04-01', end: '1970-11-30' },
+    { name: 'Season 1', subtitle: 'Mar 1960 - Nov 1960', start: '1960-03-01', end: '1960-11-30' },
+    { name: 'Season 2', subtitle: 'Feb 1962 - Oct 1962', start: '1961-02-01', end: '1962-08-30' },
+    { name: 'Season 3', subtitle: 'Mar 1963 - Dec 1963', start: '1963-03-01', end: '1963-12-31' },
+    { name: 'Season 4', subtitle: 'Nov 1964 - Oct 1965', start: '1964-11-01', end: '1965-08-30' },
+    { name: 'Season 5', subtitle: 'May 1966 - Apr 1967', start: '1966-05-01', end: '1967-04-30' },
+    { name: 'Season 6', subtitle: 'Dec 1967 - Nov 1968', start: '1967-12-01', end: '1968-11-30' },
+    { name: 'Season 7A', subtitle: 'Jan 1969 - Jul 1969', start: '1969-01-01', end: '1969-07-30' },
+    { name: 'Season 7B', subtitle: 'Apr 1970 - Nov 1970', start: '1970-04-01', end: '1970-11-30' },
   ];
 
-  // Calculate the width and position of each season box
-  const calculateSeasonPosition = (startDate, endDate) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    // Calculate the total timeline duration in milliseconds
+  // Calculate the width and position of each season box relative to the full timeline
+  const calculateSeasonPosition = (season) => {
     const timelineStart = new Date('1960-01-01').getTime();
     const timelineEnd = new Date('1970-12-31').getTime();
-    const timelineDuration = timelineEnd - timelineStart;
+    const seasonStart = new Date(season.start).getTime();
+    const seasonEnd = new Date(season.end).getTime();
 
-    // Calculate the start and end positions of the season relative to the timeline
-    const seasonStartPosition = ((start.getTime() - timelineStart) / timelineDuration) * 100;
-    const seasonEndPosition = ((end.getTime() - timelineStart) / timelineDuration) * 100;
+    const seasonStartPosition = ((seasonStart - timelineStart) / (timelineEnd - timelineStart)) * 100;
+    const seasonEndPosition = ((seasonEnd - timelineStart) / (timelineEnd - timelineStart)) * 100;
 
     return {
       left: `${seasonStartPosition}%`,
@@ -68,32 +69,41 @@ const Timeline = ({ colors }) => {
     };
   };
 
+  // Calculate the width and position of each season box relative to the zoomed year
+  const calculateSeasonPositionInYear = (season, zoomedYear) => {
+    const yearStart = new Date(`${zoomedYear}-01-01`).getTime();
+    const yearEnd = new Date(`${zoomedYear}-12-31`).getTime();
+    const seasonStart = new Date(season.start).getTime();
+    const seasonEnd = new Date(season.end).getTime();
+
+    const seasonStartPosition = ((seasonStart - yearStart) / (yearEnd - yearStart)) * 100;
+    const seasonEndPosition = ((seasonEnd - yearStart) / (yearEnd - yearStart)) * 100;
+
+    return {
+      left: `${seasonStartPosition}%`,
+      width: `${seasonEndPosition - seasonStartPosition}%`,
+    };
+  };
+
+  // Get the seasons that fall within the zoomed year
+  const getSeasonsInYear = (year) => {
+    return seasons.filter((season) => {
+      const seasonStart = new Date(season.start).getFullYear();
+      const seasonEnd = new Date(season.end).getFullYear();
+      return seasonStart <= year && seasonEnd >= year;
+    });
+  };
+
   return (
     <div className="timelineContainer">
-      {/* Season Timeline */}
-      <div className="seasonTimeline">
-        {seasons.map((season, index) => {
-          const position = calculateSeasonPosition(season.start, season.end);
-          return (
-            <div
-              key={season.name}
-              className="seasonSection"
-              onClick={() => handleSeasonClick(index)}
-              style={{
-                backgroundColor: colors[index % colors.length],
-                left: position.left,
-                width: position.width,
-              }}
-            >
-              <span>{season.name}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Year Timeline */}
+      {/* Zoomed View */}
       {zoomedIndex !== null || zoomedSeasonIndex !== null ? (
         <div className="zoomedView">
+          {/* Back Button */}
+          <button className="backButton" onClick={handleBackClick}>
+            Back to Main View
+          </button>
+
           {/* Left edge (previous year/season) */}
           <div
             className="edge prev"
@@ -156,21 +166,70 @@ const Timeline = ({ colors }) => {
                 : seasons[zoomedSeasonIndex + 1]?.name}
             </span>
           </div>
+
+          {/* Display seasons when zoomed into a year */}
+          {zoomedIndex !== null && (
+            <div className="seasonTimeline zoomedSeasonTimeline">
+              {getSeasonsInYear(years[zoomedIndex]).map((season, index) => {
+                const position = calculateSeasonPositionInYear(season, years[zoomedIndex]);
+                return (
+                  <div
+                    key={season.name}
+                    className="seasonSection"
+                    style={{
+                      backgroundColor: '#57868f', // Specific color for seasons
+                      left: position.left,
+                      width: position.width,
+                    }}
+                  >
+                    <span>{season.name}</span>
+                    <span className="seasonSubtitle">{season.subtitle}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       ) : (
-        <div className="timeline">
-          {years.map((year, index) => (
-            <div
-              key={year}
-              className="timelineSection"
-              onClick={() => handleSectionClick(index)}
-              style={{ backgroundColor: colors[index] }}
-            >
-              <span>{year}</span>
-            </div>
-          ))}
-        </div>
+        <>
+          {/* Normal View: Season Timeline */}
+          <div className="seasonTimeline">
+            {seasons.map((season, index) => {
+              const position = calculateSeasonPosition(season);
+              return (
+                <div
+                  key={season.name}
+                  className="seasonSection"
+                  onClick={() => handleSeasonClick(index)}
+                  style={{
+                    backgroundColor: '#57868f', // Specific color for seasons
+                    left: position.left,
+                    width: position.width,
+                  }}
+                >
+                  <span>{season.name}</span>
+                  <span className="seasonSubtitle">{season.subtitle}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Normal View: Year Timeline */}
+          <div className="timeline">
+            {years.map((year, index) => (
+              <div
+                key={year}
+                className="timelineSection"
+                onClick={() => handleSectionClick(index)}
+                style={{ backgroundColor: colors[index] }}
+              >
+                <span>{year}</span>
+              </div>
+            ))}
+          </div>
+        </>
       )}
+
       {/* Don image */}
       <div className="don">
         <img src="/src/assets/don.webp" alt="Don" className="bottom-left-image" />
