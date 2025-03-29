@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import '../css/timeline.css';
 
 const Timeline = ({ colors }) => {
   const [zoomedIndex, setZoomedIndex] = useState(null);
   const [zoomedSeasonIndex, setZoomedSeasonIndex] = useState(null);
-
+  const zoomedSectionRef = useRef(null);
+  const [zoomedSectionRect, setZoomedSectionRect] = useState(null);
+  
   const handleSectionClick = (index) => {
     setZoomedIndex(index);
     setZoomedSeasonIndex(null); // Reset season zoom when year is clicked
@@ -36,7 +38,14 @@ const Timeline = ({ colors }) => {
     setZoomedSeasonIndex(null); // Reset both zoom states to return to the main view
   };
 
-  const years = Array.from({ length: 11 }, (_, i) => 1960 + i); // Years from 1960 to 1970
+  useLayoutEffect(() => {
+    if (zoomedSectionRef.current) {
+      const rect = zoomedSectionRef.current.getBoundingClientRect();
+      setZoomedSectionRect(rect);
+    }
+  }, [zoomedIndex, zoomedSeasonIndex]);
+
+  const years = Array.from({ length: 11 }, (_, i) => 1960 + i);
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December',
@@ -103,28 +112,77 @@ const Timeline = ({ colors }) => {
           <button className="backButton" onClick={handleBackClick}>
             Back to Main View
           </button>
-
-          {/* Left edge (previous year/season) */}
-          <div
-            className="edge prev"
-            onClick={() => handleEdgeClick('prev')}
-            style={{
-              backgroundColor:
-                zoomedIndex !== null
-                  ? colors[zoomedIndex - 1]
-                  : colors[zoomedSeasonIndex - 1],
-            }}
-          >
-            <span>
-              {zoomedIndex !== null
-                ? years[zoomedIndex - 1]
-                : seasons[zoomedSeasonIndex - 1]?.name}
-            </span>
-          </div>
-
+  
+          {/* Left & Right Edge Buttons - Pixel Perfect Position */}
+          {zoomedSectionRect && (
+            <>
+              <div
+                className="edge prev"
+                onClick={() => handleEdgeClick('prev')}
+                style={{
+                  backgroundColor:
+                    zoomedIndex !== null
+                      ? colors[zoomedIndex - 1]
+                      : colors[zoomedSeasonIndex - 1],
+                  top: `${zoomedSectionRect.top}px`,
+                  height: `${zoomedSectionRect.height}px`,
+                }}
+              >
+                <span>
+                  {zoomedIndex !== null
+                    ? years[zoomedIndex - 1]
+                    : seasons[zoomedSeasonIndex - 1]?.name}
+                </span>
+              </div>
+  
+              <div
+                className="edge next"
+                onClick={() => handleEdgeClick('next')}
+                style={{
+                  backgroundColor:
+                    zoomedIndex !== null
+                      ? colors[zoomedIndex + 1]
+                      : colors[zoomedSeasonIndex + 1],
+                  top: `${zoomedSectionRect.top}px`,
+                  height: `${zoomedSectionRect.height}px`,
+                }}
+              >
+                <span>
+                  {zoomedIndex !== null
+                    ? years[zoomedIndex + 1]
+                    : seasons[zoomedSeasonIndex + 1]?.name}
+                </span>
+              </div>
+            </>
+          )}
+  
+          {/* Display seasons when zoomed into a year */}
+          {zoomedIndex !== null && (
+            <div className="seasonTimeline zoomedSeasonTimeline">
+              {getSeasonsInYear(years[zoomedIndex]).map((season, index) => {
+                const position = calculateSeasonPositionInYear(season, years[zoomedIndex]);
+                return (
+                  <div
+                    key={season.name}
+                    className="seasonSection"
+                    style={{
+                      backgroundColor: '#57868f',
+                      left: position.left,
+                      width: position.width,
+                    }}
+                  >
+                    <span>{season.name}</span>
+                    <span className="seasonSubtitle">{season.subtitle}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+  
           {/* Zoomed year/season */}
           <div
             className="zoomedSection"
+            ref={zoomedSectionRef}
             style={{
               backgroundColor:
                 zoomedIndex !== null
@@ -148,47 +206,6 @@ const Timeline = ({ colors }) => {
               </div>
             )}
           </div>
-
-          {/* Right edge (next year/season) */}
-          <div
-            className="edge next"
-            onClick={() => handleEdgeClick('next')}
-            style={{
-              backgroundColor:
-                zoomedIndex !== null
-                  ? colors[zoomedIndex + 1]
-                  : colors[zoomedSeasonIndex + 1],
-            }}
-          >
-            <span>
-              {zoomedIndex !== null
-                ? years[zoomedIndex + 1]
-                : seasons[zoomedSeasonIndex + 1]?.name}
-            </span>
-          </div>
-
-          {/* Display seasons when zoomed into a year */}
-          {zoomedIndex !== null && (
-            <div className="seasonTimeline zoomedSeasonTimeline">
-              {getSeasonsInYear(years[zoomedIndex]).map((season, index) => {
-                const position = calculateSeasonPositionInYear(season, years[zoomedIndex]);
-                return (
-                  <div
-                    key={season.name}
-                    className="seasonSection"
-                    style={{
-                      backgroundColor: '#57868f', // Specific color for seasons
-                      left: position.left,
-                      width: position.width,
-                    }}
-                  >
-                    <span>{season.name}</span>
-                    <span className="seasonSubtitle">{season.subtitle}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       ) : (
         <>
@@ -202,7 +219,7 @@ const Timeline = ({ colors }) => {
                   className="seasonSection"
                   onClick={() => handleSeasonClick(index)}
                   style={{
-                    backgroundColor: '#57868f', // Specific color for seasons
+                    backgroundColor: '#57868f',
                     left: position.left,
                     width: position.width,
                   }}
@@ -213,7 +230,7 @@ const Timeline = ({ colors }) => {
               );
             })}
           </div>
-
+  
           {/* Normal View: Year Timeline */}
           <div className="timeline">
             {years.map((year, index) => (
@@ -229,13 +246,13 @@ const Timeline = ({ colors }) => {
           </div>
         </>
       )}
-
+  
       {/* Don image */}
       <div className="don">
         <img src="/src/assets/don.webp" alt="Don" className="bottom-left-image" />
       </div>
     </div>
   );
-};
+            }
 
 export default Timeline;
