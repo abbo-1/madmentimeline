@@ -6,7 +6,9 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
-  background-image: linear-gradient(-321deg, #0d0d0d44 46%, transparent 98.05%),radial-gradient(circle at 14% 105%, #00bfff1f 38%, transparent 59.05%);
+  /* background-image: linear-gradient(-321deg, #0d0d0d44 46%, transparent 98.05%),radial-gradient(circle at 14% 105%, #00bfff1f 38%, transparent 59.05%); */
+  background-color: black;
+  background-image: radial-gradient(circle at -119% 467%, #5e618250 77%, transparent 119.05%),radial-gradient(circle at -63% 396%, #29cbe01e 80%, transparent 98.05%),radial-gradient(circle at -39% 212%, #48affe35 63%, transparent 76.05%);
 }
 
 .timelineContainer {
@@ -15,6 +17,7 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
+  width: 100vw;
   overflow: hidden;
 }
 
@@ -78,11 +81,23 @@ body {
   opacity: 0.8;
 }
 
+@media (max-width: 768px) {
+  .month::before {
+    content: attr(data-short);
+  }
+  .month {
+    font-size: 0.75rem;
+  }
+  .month::after {
+    content: none;
+  }
+}
+
 .zoomedView {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* Center content vertically */
+  justify-content: center;
   width: 100%;
   height: 100vh;
   position: relative;
@@ -104,25 +119,28 @@ body {
   color: white;
   font-size: 3rem;
   font-weight: bold;
-  margin-top: 20px; /* add some spacing if needed */
-}
+  margin-top: 20px;
+} 
 
 .monthsContainer {
   display: flex;
   width: 100%;
+  height: 30px;
+  overflow: hidden;
   justify-content: space-between;
-  position: absolute;
-  top: 0;
-  padding: 10px 0;
-
+  position: relative;
 }
 
 .month {
-  flex: 1;
+  flex: 1 0 auto;
+  min-width: 0;
   text-align: center;
   font-size: 1rem;
-  color: #333;
-  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: white;
+  transition: font-size 0.2s ease;
 }
 
 .monthDivider {
@@ -171,14 +189,14 @@ body {
   width: 658px;
   z-index: 1;
 }
-
+/* 
 .zoomedSeasonTimeline {
-  width: 80%; /* Match the width of zoomedSection */
-  height: 30%; /* Adjust height as needed */
-  margin-top: 20px; /* Add spacing between zoomedSection and seasonTimeline */
+  width: 80%; 
+  height: 30%; 
+  margin-top: 20px; 
   position: relative;
-  background-color: rgba(204, 204, 204, 0.8); /* Semi-transparent background */
-}
+  background-color: rgba(204, 204, 204, 0.8); 
+} */
 
 .backButton {
   position: absolute;
@@ -197,4 +215,55 @@ body {
 
 .backButton:hover {
   background-color: #555;
+}
+/* Ensure proper spacing */
+.zoomedView {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  position: relative;
+}
+
+.zoomedSeasonTimeline, 
+.zoomedYearTimeline {
+  position: relative;
+  height: 20%;
+  width: 100%;
+  margin: 10px 0;
+}
+
+.monthsContainer {
+  display: flex;
+  width: 100%;
+  position: relative;
+  height: 30px;
+  margin-top: 10px;
+}
+
+/* For season view months */
+.monthsContainer.seasonMonths {
+  display: block;
+  overflow: hidden;
+}
+
+.month {
+  position: relative;
+  text-align: center;
+  font-size: 0.8rem;
+  flex: 1;
+  color: white;
+}
+
+.seasonTimeline {
+  order: 1; /* Always on top */
+}
+
+.zoomedSection {
+  order: 2; /* Center content */
+}
+
+.timeline {
+  order: 3; /* Always on bottom */
 }
