@@ -12,7 +12,7 @@ import {
 const ClickableTimeline = ({ seasons }) => {
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedSeason, setSelectedSeason] = useState(null);
-  const [selectedEpisode, setSelectedEpisode] = useState(null);
+  const [selectedEpisodes, setSelectedEpisodes] = useState([]);
   const [showAllEpisodes, setShowAllEpisodes] = useState(false);
   const [showSubtitles] = useState(true);
   const [panPosition, setPanPosition] = useState(0);
@@ -26,7 +26,7 @@ const ClickableTimeline = ({ seasons }) => {
   const handleYearClick = (year) => {
     setSelectedYear(year);
     setSelectedSeason(null);
-    setSelectedEpisode(null);
+    setSelectedEpisodes([]);
     setShowAllEpisodes(false);
     setPanPosition(0);
   };
@@ -34,20 +34,29 @@ const ClickableTimeline = ({ seasons }) => {
   const handleSeasonClick = (season) => {
     setSelectedSeason(season);
     setSelectedYear(null);
-    setSelectedEpisode(null);
+    setSelectedEpisodes([]);
     setShowAllEpisodes(false);
     setPanPosition(0);
   };
 
   const handleEpisodeClick = (episode) => {
-    setSelectedEpisode(selectedEpisode === episode ? null : episode);
-    setShowAllEpisodes(false);
-    console.log(`Clicked ${selectedSeason.name} Episode ${episode.number}: ${episode.title}`, episode.dates);
-  };
+    setSelectedEpisodes(prev => {
+    const isAlreadySelected = prev.some(ep => ep.number === episode.number);
+    if (isAlreadySelected) {
+      // Remove episode from selection
+      return prev.filter(ep => ep.number !== episode.number);
+    } else {
+      // Add episode to selection
+      return [...prev, episode];
+    }
+  });
+  setShowAllEpisodes(false);
+  console.log(`Toggled ${selectedSeason.name} Episode ${episode.number}: ${episode.title}`);
+};
 
   const handleShowAllEpisodes = () => {
     setShowAllEpisodes(!showAllEpisodes);
-    setSelectedEpisode(null);
+    setSelectedEpisodes([]);
   };
 
   const handleMouseDown = (e) => {
@@ -94,53 +103,54 @@ const ClickableTimeline = ({ seasons }) => {
     });
   };
 
-  const getDayHighlighting = (year, month, day) => {
+    const getDayHighlighting = (year, month, day) => {
     if (showAllEpisodes) {
-      //show all episode dates for the season with their respective colors
-      const episode = getEpisodeForDate(year, month, day);
-      if (episode) {
+        //show all episode dates for the season with their respective colors
+        const episode = getEpisodeForDate(year, month, day);
+        if (episode) {
         const episodeIndex = selectedSeason.episodes.indexOf(episode);
         const targetDate = new Date(year, month, day);
         const confidence = getDateConfidence(episode, targetDate);
         return {
-          isHighlighted: true,
-          color: getEpisodeColor(episodeIndex, selectedSeason.episodes.length),
-          confidence: confidence.confidence,
-          type: confidence.type
+            isHighlighted: true,
+            color: getEpisodeColor(episodeIndex, selectedSeason.episodes.length),
+            confidence: confidence.confidence,
+            type: confidence.type
         };
-      }
-      return { isHighlighted: false, color: null, confidence: null, type: null };
+        }
+        return { isHighlighted: false, color: null, confidence: null, type: null };
     }
     
-    if (!selectedEpisode) return { isHighlighted: false, color: null, confidence: null, type: null };
+    if (!selectedEpisodes.length) return { isHighlighted: false, color: null, confidence: null, type: null };
     
+    for (const selectedEpisode of selectedEpisodes) {
     const episodeDates = getEpisodeDates(selectedEpisode);
     const targetDate = new Date(year, month, day);
     const isHighlighted = episodeDates.some(date => 
-      date.getFullYear() === year && 
-      date.getMonth() === month && 
-      date.getDate() === day
+        date.getFullYear() === year && 
+        date.getMonth() === month && 
+        date.getDate() === day
     );
     
     if (isHighlighted) {
-      const episodeIndex = selectedSeason.episodes.indexOf(selectedEpisode);
-      const confidence = getDateConfidence(selectedEpisode, targetDate);
-      return {
-        isHighlighted: true,
-        color: getEpisodeColor(episodeIndex, selectedSeason.episodes.length),
-        confidence: confidence.confidence,
-        type: confidence.type
-      };
+            const episodeIndex = selectedSeason.episodes.indexOf(selectedEpisode);
+            const confidence = getDateConfidence(selectedEpisode, targetDate);
+            return {
+            isHighlighted: true,
+            color: getEpisodeColor(episodeIndex, selectedSeason.episodes.length),
+            confidence: confidence.confidence,
+            type: confidence.type
+            };
+        }
     }
     
     return { isHighlighted: false, color: null, confidence: null, type: null };
-  };
+    };
 
   const renderCalendar = (monthInfo) => {
     const daysInMonth = getDaysInMonth(monthInfo.year, monthInfo.month);
     const firstDayOfMonth = new Date(monthInfo.year, monthInfo.month, 1).getDay(); 
     // 0 = sunday, 1 = monday, etc.
-    
     const days = [];
     
     //add empty cells for days before the first day of the month
@@ -278,7 +288,7 @@ const ClickableTimeline = ({ seasons }) => {
         {selectedSeason && (
           <SeasonView
             selectedSeason={selectedSeason}
-            selectedEpisode={selectedEpisode}
+            selectedEpisodes={selectedEpisodes}
             showAllEpisodes={showAllEpisodes}
             panPosition={panPosition}
             isDragging={isDragging}

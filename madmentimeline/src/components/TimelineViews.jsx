@@ -390,7 +390,7 @@ YearView.propTypes = {
 
 export const SeasonView = ({ 
   selectedSeason,
-  selectedEpisode,
+  selectedEpisodes,
   showAllEpisodes,
   panPosition,
   isDragging,
@@ -483,7 +483,7 @@ export const SeasonView = ({
           justifyContent: 'center'
         }}>
           {selectedSeason.episodes.map((episode, index) => {
-            const isSelected = selectedEpisode === episode;
+            const isSelected = selectedEpisodes.some(ep => ep.number === episode.number);
             const hasMultipleDates = episode.dates.length > 1;
             const hasRanges = episode.dates.some(dateObj => dateObj.start && dateObj.end);
             
@@ -631,8 +631,8 @@ export const SeasonView = ({
           {showAllEpisodes ? 'Hide All Episodes' : 'Display All Episodes'}
         </button>
 
-        {selectedEpisode && (
-          <div style={{ 
+        {selectedEpisodes.length > 0 && (
+        <div style={{ 
             fontSize: '1rem', 
             opacity: 0.9, 
             marginTop: '10px',
@@ -640,11 +640,14 @@ export const SeasonView = ({
             background: selectedSeason.color + '33',
             borderRadius: '20px',
             border: `2px solid ${selectedSeason.color}`
-          }}>
-            Selected: Episode {selectedEpisode.number} - {selectedEpisode.title}
-          </div>
+        }}>
+            Selected: {selectedEpisodes.length === 1 
+            ? `Episode ${selectedEpisodes[0].number} - ${selectedEpisodes[0].title}`
+            : `${selectedEpisodes.length} episodes (${selectedEpisodes.map(ep => ep.number).sort((a,b) => a-b).join(', ')})`
+            }
+        </div>
         )}
-        
+
         {showAllEpisodes && (
           <div style={{ 
             fontSize: '1rem', 
@@ -753,7 +756,7 @@ SeasonView.propTypes = {
       dates: PropTypes.array.isRequired
     })).isRequired
   }),
-  selectedEpisode: PropTypes.object,
+  selectedEpisodes: PropTypes.arrayOf(PropTypes.object),
   showAllEpisodes: PropTypes.bool.isRequired,
   panPosition: PropTypes.number.isRequired,
   isDragging: PropTypes.bool.isRequired,
