@@ -215,7 +215,7 @@ export const YearView = ({
         flexDirection: 'column',
         minHeight: 0
       }}>
-        {seasonsInYear.map((season) => {
+        {seasonsInYear.map((season, seasonIndex) => {
           const seasonStart = new Date(season.start);
           const seasonEnd = new Date(season.end);
           
@@ -463,6 +463,139 @@ export const SeasonView = ({
         <div style={{ fontSize: '1rem', opacity: 0.8, marginBottom: '15px' }}>
           {selectedSeason.episodes.length} episodes
         </div>
+
+      {/* episodes selection - above calendars */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        marginBottom: '30px',
+        position: 'relative'
+      }}>
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          padding: '15px',
+          background: 'rgba(0,0,0,0.4)',
+          borderRadius: '10px',
+          overflow: 'auto',
+          maxWidth: '100%',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          {selectedSeason.episodes.map((episode, index) => {
+            const isSelected = selectedEpisode === episode;
+            const hasMultipleDates = episode.dates.length > 1;
+            const hasRanges = episode.dates.some(dateObj => dateObj.start && dateObj.end);
+            
+            //determine episode image path
+            let seasonNumber, episodeNumber;
+            if (selectedSeason.name.toLowerCase().includes('7a')) {
+            seasonNumber = '7';
+            episodeNumber = episode.number; 
+            //episodes 1-7 for 7A
+            } else if (selectedSeason.name.toLowerCase().includes('7b')) {
+            seasonNumber = '7';
+            episodeNumber = episode.number + 7; 
+            // episodes 1-7 become 8-14 for 7B
+            } else {
+            // every other season
+            seasonNumber = selectedSeason.name.match(/\d+/)?.[0] || '1';
+            episodeNumber = episode.number;
+            }
+            const episodeImagePath = `/src/assets/episodes/S${seasonNumber}E${episodeNumber}.jpg`;
+
+            console.log('looking for image:', episodeImagePath);
+
+            const handleImageError = (e) => {
+              console.warn('Episode image failed to load:', episodeImagePath);
+              //fallback to numbered circle
+              e.target.style.display = 'none';
+              const fallbackDiv = document.createElement('div');
+              fallbackDiv.style.cssText = `
+                width: 80px; height: 120px; background: linear-gradient(135deg, hsl(${index * 30}, 60%, 50%) 0%, hsl(${index * 30}, 60%, 40%) 100%);
+                display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;
+                font-size: 1.2rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); border-radius: 8px;
+                border: ${isSelected ? '4px solid #FFD700' : hasMultipleDates || hasRanges ? '3px solid #FFD700' : '2px solid rgba(255,255,255,0.3)'};
+                cursor: pointer; transition: all 0.2s ease;
+              `;
+              fallbackDiv.textContent = episode.number;
+              fallbackDiv.onclick = () => onEpisodeClick(episode);
+              e.target.parentNode.appendChild(fallbackDiv);
+            };
+            
+            return (
+              <div
+                key={episode.number}
+                onClick={() => onEpisodeClick(episode)}
+                style={{
+                  position: 'relative',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                  filter: isSelected ? 'brightness(1.1)' : 'brightness(1)'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.transform = 'scale(1.05) translateY(-5px)';
+                    e.currentTarget.style.filter = 'brightness(1.1)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.transform = 'scale(1) translateY(0)';
+                    e.currentTarget.style.filter = 'brightness(1)';
+                  }
+                }}
+                title={`${episode.title}\n${episode.dates.map(dateObj => {
+                  let dateStr = '';
+                  if (dateObj.date) dateStr = dateObj.date;
+                  else if (dateObj.start && dateObj.end) dateStr = `${dateObj.start} to ${dateObj.end}`;
+                  return `${dateStr} (${dateObj.confidence}, ${dateObj.type})`;
+                }).join('\n')}\nClick to highlight dates in calendar${showAllEpisodes ? ' (will clear "Display All")' : ''}`}
+              >
+                <img 
+                  src={episodeImagePath}
+                  alt={`${selectedSeason.name} Episode ${episode.number}: ${episode.title}`}
+                  onError={handleImageError}
+                  style={{
+                    width: '200px',
+                    height: '120px',
+                    objectFit: 'cover',
+                    borderRadius: '8px',
+                    border: isSelected 
+                      ? '4px solid #FFD700'
+                      : hasMultipleDates || hasRanges ? '3px solid #FFD700' : '2px solid rgba(255,255,255,0.3)',
+                    boxShadow: isSelected 
+                      ? '0 8px 25px rgba(0,0,0,0.5)'
+                      : '0 4px 15px rgba(0,0,0,0.3)',
+                    display: 'block'
+                  }}
+                />
+                {(hasMultipleDates || hasRanges) && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-5px',
+                    right: '-5px',
+                    width: '16px',
+                    height: '16px',
+                    background: hasRanges ? '#FF6B6B' : '#FFD700',
+                    borderRadius: '50%',
+                    fontSize: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#000',
+                    fontWeight: 'bold',
+                    border: '2px solid white'
+                  }}>
+                    {hasRanges ? 'R' : episode.dates.length}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
         
         {/* display all episodes button */}
         <button
@@ -602,102 +735,6 @@ export const SeasonView = ({
               {renderCalendar(monthInfo)}
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* episodes line */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        marginBottom: '20px',
-        position: 'relative'
-      }}>
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          padding: '15px',
-          background: 'rgba(0,0,0,0.4)',
-          borderRadius: '10px',
-          overflow: 'auto',
-          maxWidth: '100%'
-        }}>
-          {selectedSeason.episodes.map((episode, index) => {
-            const isSelected = selectedEpisode === episode;
-            const episodeColor = getEpisodeColor(index, selectedSeason.episodes.length);
-            const hasMultipleDates = episode.dates.length > 1;
-            const hasRanges = episode.dates.some(dateObj => dateObj.start && dateObj.end);
-            
-            return (
-              <div
-                key={episode.number}
-                onClick={() => onEpisodeClick(episode)}
-                style={{
-                  minWidth: '60px',
-                  height: '60px',
-                  background: isSelected 
-                    ? `linear-gradient(135deg, ${episodeColor} 0%, ${episodeColor} 100%)`
-                    : `linear-gradient(135deg, ${episodeColor} 0%, ${episodeColor.replace('rgb(', 'rgba(').replace(')', ', 0.7)')} 100%)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '1.1rem',
-                  textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
-                  border: isSelected 
-                    ? `4px solid #FFD700`
-                    : hasMultipleDates || hasRanges ? '3px solid #FFD700' : '2px solid rgba(255,255,255,0.3)',
-                  borderRadius: '8px',
-                  boxShadow: isSelected 
-                    ? '0 8px 25px rgba(0,0,0,0.5)'
-                    : '0 4px 15px rgba(0,0,0,0.3)',
-                  transition: 'all 0.2s ease',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transform: isSelected ? 'scale(1.1)' : 'scale(1)'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSelected) {
-                    e.target.style.transform = 'scale(1.1) translateY(-5px)';
-                    e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.4)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelected) {
-                    e.target.style.transform = 'scale(1) translateY(0)';
-                    e.target.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
-                  }
-                }}
-                title={`${episode.title}\n${episode.dates.map(dateObj => {
-                  let dateStr = '';
-                  if (dateObj.date) dateStr = dateObj.date;
-                  else if (dateObj.start && dateObj.end) dateStr = `${dateObj.start} to ${dateObj.end}`;
-                  return `${dateStr} (${dateObj.confidence}, ${dateObj.type})`;
-                }).join('\n')}\nClick to highlight dates in calendar${showAllEpisodes ? ' (will clear "Display All")' : ''}`}
-              >
-                {episode.number}
-                {(hasMultipleDates || hasRanges) && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-5px',
-                    right: '-5px',
-                    width: '14px',
-                    height: '14px',
-                    background: hasRanges ? '#FF6B6B' : '#FFD700',
-                    borderRadius: '50%',
-                    fontSize: '9px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#000',
-                    fontWeight: 'bold'
-                  }}>
-                    {hasRanges ? 'R' : episode.dates.length}
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </div>
       </div>
     </div>

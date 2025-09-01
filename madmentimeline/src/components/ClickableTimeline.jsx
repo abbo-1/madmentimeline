@@ -235,7 +235,7 @@ const ClickableTimeline = ({ seasons }) => {
       onMouseDown={handleMouseDown}
       style={{
         color: '#ffffff',
-        fontFamily: '"Helvetica Neue", Arial, sans-serif',
+        fontFamily: '"Swiss721HeavyRegular", Arial, sans-serif',
         padding: '20px',
         overflow: 'hidden',
         display: 'flex',
@@ -243,7 +243,7 @@ const ClickableTimeline = ({ seasons }) => {
         position: 'relative'
       }}
     >
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, zIndex: 100}}>
         
         <TimelineHeader 
           selectedYear={selectedYear} 

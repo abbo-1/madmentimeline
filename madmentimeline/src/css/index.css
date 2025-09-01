@@ -10,7 +10,7 @@
 } */
 
 @font-face {
-  font-family: "HelveticaNeueHeavy";
-  src: local("HelveticaNeue Heavy"),
-       url("../assets/HelveticaNeueHeavy.ttf") format("truetype");
+  font-family: "Swiss721HeavyRegular";
+  src: local("Swiss721HeavyRegular"),
+       url("../assets/Swiss721HeavyRegular.otf") format("truetype");
 }

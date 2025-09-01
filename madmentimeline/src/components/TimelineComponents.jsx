@@ -2,30 +2,41 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 export const TimelineHeader = ({ selectedYear, selectedSeason }) => {
-  const getViewTitle = () => {
-    if (selectedYear) return `${selectedYear} - Monthly View`;
-    if (selectedSeason) return `${selectedSeason.name} - Season View`;
-    return 'Mad Men Timeline (1960-1970)';
+    const handleImageError = (e) => {
+    console.warn('Logo image failed to load:', e.target.src);
+    // Fallback to text if image fails to load
+    e.target.style.display = 'none';
+    const textFallback = document.createElement('h1');
+    textFallback.style.cssText = 'fontSize: 1.8rem; fontWeight: bold; margin: 0; color: #ffffff; textShadow: 2px 2px 4px rgba(0,0,0,0.5);';
+    
+    const getViewTitle = () => {
+      if (selectedYear) return `${selectedYear} - Monthly View`;
+      if (selectedSeason) return `${selectedSeason.name} - Season View`;
+      return 'Mad Men Timeline (1960-1970)';
+    };
+    
+    textFallback.textContent = getViewTitle();
+    e.target.parentNode.appendChild(textFallback);
   };
 
-  return (
+   return (
     <div style={{
       textAlign: 'center',
       marginBottom: '20px',
       padding: '10px 20px',
-      background: 'rgba(255,255,255,0.1)',
-      borderRadius: '8px',
-      backdropFilter: 'blur(10px)'
     }}>
-      <h1 style={{
-        fontSize: '1.8rem',
-        fontWeight: 'bold',
-        margin: 0,
-        color: '#ffffff',
-        textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
-      }}>
-        {getViewTitle()}
-      </h1>
+      <img 
+        src="/src/assets/logoTest.png"
+        alt="Mad Men Timeline Logo"
+        onError={handleImageError}
+        style={{
+          maxHeight: '200px',
+          maxWidth: '100%',
+          height: 'auto',
+          display: 'block',
+          margin: '0 auto'
+        }}
+      />
     </div>
   );
 };
